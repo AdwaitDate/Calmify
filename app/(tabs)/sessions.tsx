@@ -1,64 +1,110 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Brain, Wind, Book } from 'lucide-react-native';
+import { useTheme } from '@/utils/ThemeContext';
+import { Play, Calendar, Clock, TrendingUp } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function SessionsScreen() {
+  const { theme } = useTheme();
+
+  const sessions = [
+    {
+      id: 1,
+      title: 'Morning Meditation',
+      duration: '10 min',
+      schedule: 'Daily at 8:00 AM',
+      progress: '7/10 completed',
+    },
+    {
+      id: 2,
+      title: 'Stress Relief',
+      duration: '15 min',
+      schedule: 'Mon, Wed, Fri',
+      progress: '5/8 completed',
+    },
+    {
+      id: 3,
+      title: 'Deep Sleep',
+      duration: '20 min',
+      schedule: 'Every night',
+      progress: '12/15 completed',
+    },
+  ];
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Wellness Sessions</Text>
-          <Text style={styles.subtitle}>Choose your practice for today</Text>
-        </View>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.background }]}
+    >
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: theme.text.primary }]}>
+          Sessions
+        </Text>
+        <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
+          Your mindfulness journey
+        </Text>
+      </View>
 
-        <View style={styles.categoriesContainer}>
-          <TouchableOpacity style={styles.categoryCard}>
-            <View style={[styles.iconContainer, { backgroundColor: '#EEF2FF' }]}>
-              <Brain size={24} color="#6366F1" />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {sessions.map((session) => (
+          <View
+            key={session.id}
+            style={[styles.sessionCard, { backgroundColor: theme.card }]}
+          >
+            <LinearGradient
+              colors={[theme.primary + '15', 'transparent']}
+              style={styles.cardGradient}
+            />
+            <View style={styles.sessionHeader}>
+              <Text
+                style={[styles.sessionTitle, { color: theme.text.primary }]}
+              >
+                {session.title}
+              </Text>
+              <TouchableOpacity
+                style={[styles.playButton, { backgroundColor: theme.primary }]}
+              >
+                <Play size={20} color={theme.text.inverse} />
+              </TouchableOpacity>
             </View>
-            <Text style={styles.categoryTitle}>Meditation</Text>
-            <Text style={styles.categoryDescription}>Guided sessions for inner peace</Text>
-            <TouchableOpacity style={styles.startButton}>
-              <Text style={styles.startButtonText}>Start</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
 
-          <TouchableOpacity style={styles.categoryCard}>
-            <View style={[styles.iconContainer, { backgroundColor: '#F0FDF4' }]}>
-              <Wind size={24} color="#22C55E" />
+            <View style={styles.sessionDetails}>
+              <View style={styles.detailItem}>
+                <Clock size={16} color={theme.text.secondary} />
+                <Text
+                  style={[styles.detailText, { color: theme.text.secondary }]}
+                >
+                  {session.duration}
+                </Text>
+              </View>
+              <View style={styles.detailItem}>
+                <Calendar size={16} color={theme.text.secondary} />
+                <Text
+                  style={[styles.detailText, { color: theme.text.secondary }]}
+                >
+                  {session.schedule}
+                </Text>
+              </View>
+              <View style={styles.detailItem}>
+                <TrendingUp size={16} color={theme.text.secondary} />
+                <Text
+                  style={[styles.detailText, { color: theme.text.secondary }]}
+                >
+                  {session.progress}
+                </Text>
+              </View>
             </View>
-            <Text style={styles.categoryTitle}>Breathing</Text>
-            <Text style={styles.categoryDescription}>Calming breathing exercises</Text>
-            <TouchableOpacity style={styles.startButton}>
-              <Text style={styles.startButtonText}>Start</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.categoryCard}>
-            <View style={[styles.iconContainer, { backgroundColor: '#FEF3C7' }]}>
-              <Book size={24} color="#F59E0B" />
-            </View>
-            <Text style={styles.categoryTitle}>Journaling</Text>
-            <Text style={styles.categoryDescription}>Express your thoughts</Text>
-            <TouchableOpacity style={styles.startButton}>
-              <Text style={styles.startButtonText}>Start</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.historySection}>
-          <Text style={styles.sectionTitle}>Recent Sessions</Text>
-          <View style={styles.historyCard}>
-            <Text style={styles.historyTitle}>Morning Meditation</Text>
-            <Text style={styles.historyDate}>Today, 8:30 AM</Text>
-            <Text style={styles.historyDuration}>15 minutes</Text>
           </View>
-          <View style={styles.historyCard}>
-            <Text style={styles.historyTitle}>Deep Breathing</Text>
-            <Text style={styles.historyDate}>Yesterday, 9:00 PM</Text>
-            <Text style={styles.historyDuration}>10 minutes</Text>
-          </View>
-        </View>
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
@@ -67,106 +113,77 @@ export default function SessionsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  scrollView: {
-    flex: 1,
   },
   header: {
     padding: 20,
   },
   title: {
     fontFamily: 'Inter-Bold',
-    fontSize: 24,
-    color: '#1E293B',
+    fontSize: 28,
+    marginBottom: 8,
   },
   subtitle: {
     fontFamily: 'Inter-Regular',
     fontSize: 16,
-    color: '#64748B',
-    marginTop: 4,
   },
-  categoriesContainer: {
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
     padding: 20,
+    paddingBottom: 100, // Account for tab bar
   },
-  categoryCard: {
-    backgroundColor: '#FFFFFF',
+  sessionCard: {
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 15,
-    elevation: 2,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 15,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
+  cardGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: 200,
+  },
+  sessionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
   },
-  categoryTitle: {
+  sessionTitle: {
     fontFamily: 'Inter-SemiBold',
     fontSize: 18,
-    color: '#1E293B',
-    marginBottom: 8,
   },
-  categoryDescription: {
+  playButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sessionDetails: {
+    gap: 12,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  detailText: {
     fontFamily: 'Inter-Regular',
     fontSize: 14,
-    color: '#64748B',
-    marginBottom: 16,
-  },
-  startButton: {
-    backgroundColor: '#6366F1',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-  },
-  startButtonText: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 14,
-    color: '#FFFFFF',
-  },
-  historySection: {
-    padding: 20,
-  },
-  sectionTitle: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 18,
-    color: '#1E293B',
-    marginBottom: 16,
-  },
-  historyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 15,
-    elevation: 2,
-  },
-  historyTitle: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 16,
-    color: '#1E293B',
-    marginBottom: 4,
-  },
-  historyDate: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 14,
-    color: '#64748B',
-    marginBottom: 4,
-  },
-  historyDuration: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 14,
-    color: '#6366F1',
   },
 });

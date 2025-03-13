@@ -1,89 +1,98 @@
-import { View, Text, TouchableOpacity, Switch, StyleSheet, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Switch,
+  Pressable,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, Moon, Bell, Trash2 } from 'lucide-react-native';
+import { useTheme } from '@/utils/ThemeContext';
+import { Moon, Sun, ChevronRight } from 'lucide-react-native';
 
 export default function SettingsScreen() {
+  const { theme, isDark, toggleTheme } = useTheme();
+
+  const settingsOptions = [
+    {
+      title: 'App Theme',
+      description: 'Switch between light and dark mode',
+      icon: isDark ? Moon : Sun,
+      action: 'toggle',
+      value: isDark,
+    },
+    // Add more settings options here
+  ];
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Settings</Text>
-        </View>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.background }]}
+    >
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: theme.text.primary }]}>
+          Settings
+        </Text>
+        <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
+          Customize your app experience
+        </Text>
+      </View>
 
-        <View style={styles.profileSection}>
-          <View style={styles.profileImagePlaceholder}>
-            <User size={32} color="#94A3B8" />
-          </View>
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>Sarah Johnson</Text>
-            <Text style={styles.profileEmail}>sarah.j@example.com</Text>
-          </View>
-          <TouchableOpacity style={styles.editButton}>
-            <Text style={styles.editButtonText}>Edit</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
-          
-          <View style={styles.settingItem}>
-            <View style={styles.settingLeft}>
-              <Moon size={20} color="#64748B" />
-              <Text style={styles.settingText}>Dark Mode</Text>
+      <View style={styles.settingsContainer}>
+        {settingsOptions.map((option, index) => {
+          const Icon = option.icon;
+          return (
+            <View
+              key={option.title}
+              style={[
+                styles.settingItem,
+                { backgroundColor: theme.card },
+                index === settingsOptions.length - 1 && styles.lastItem,
+              ]}
+            >
+              <View style={styles.settingContent}>
+                <View
+                  style={[
+                    styles.iconContainer,
+                    { backgroundColor: theme.primary + '15' },
+                  ]}
+                >
+                  <Icon size={20} color={theme.primary} />
+                </View>
+                <View style={styles.settingText}>
+                  <Text
+                    style={[styles.settingTitle, { color: theme.text.primary }]}
+                  >
+                    {option.title}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.settingDescription,
+                      { color: theme.text.secondary },
+                    ]}
+                  >
+                    {option.description}
+                  </Text>
+                </View>
+              </View>
+              {option.action === 'toggle' ? (
+                <Switch
+                  value={option.value}
+                  onValueChange={toggleTheme}
+                  trackColor={{
+                    false: theme.border,
+                    true: theme.primary + '70',
+                  }}
+                  thumbColor={
+                    option.value ? theme.primary : theme.text.secondary
+                  }
+                />
+              ) : (
+                <ChevronRight size={20} color={theme.text.secondary} />
+              )}
             </View>
-            <Switch
-              trackColor={{ false: "#CBD5E1", true: "#818CF8" }}
-              thumbColor="#FFFFFF"
-              ios_backgroundColor="#CBD5E1"
-            />
-          </View>
-
-          <View style={styles.settingItem}>
-            <View style={styles.settingLeft}>
-              <Bell size={20} color="#64748B" />
-              <Text style={styles.settingText}>Notifications</Text>
-            </View>
-            <Switch
-              trackColor={{ false: "#CBD5E1", true: "#818CF8" }}
-              thumbColor="#FFFFFF"
-              ios_backgroundColor="#CBD5E1"
-            />
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Health Data</Text>
-          
-          <View style={styles.settingItem}>
-            <View style={styles.settingLeft}>
-              <Text style={styles.settingText}>Connect Google Fit</Text>
-            </View>
-            <Switch
-              trackColor={{ false: "#CBD5E1", true: "#818CF8" }}
-              thumbColor="#FFFFFF"
-              ios_backgroundColor="#CBD5E1"
-            />
-          </View>
-
-          <View style={styles.settingItem}>
-            <View style={styles.settingLeft}>
-              <Text style={styles.settingText}>Connect Apple Health</Text>
-            </View>
-            <Switch
-              trackColor={{ false: "#CBD5E1", true: "#818CF8" }}
-              thumbColor="#FFFFFF"
-              ios_backgroundColor="#CBD5E1"
-            />
-          </View>
-        </View>
-
-        <View style={styles.dangerSection}>
-          <TouchableOpacity style={styles.deleteButton}>
-            <Trash2 size={20} color="#EF4444" />
-            <Text style={styles.deleteButtonText}>Delete Account</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+          );
+        })}
+      </View>
     </SafeAreaView>
   );
 }
@@ -91,102 +100,67 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  scrollView: {
-    flex: 1,
   },
   header: {
     padding: 20,
   },
   title: {
     fontFamily: 'Inter-Bold',
-    fontSize: 24,
-    color: '#1E293B',
+    fontSize: 28,
+    marginBottom: 8,
   },
-  profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    marginBottom: 24,
-  },
-  profileImagePlaceholder: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#F1F5F9',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  profileInfo: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  profileName: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 18,
-    color: '#1E293B',
-  },
-  profileEmail: {
+  subtitle: {
     fontFamily: 'Inter-Regular',
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 4,
-  },
-  editButton: {
-    backgroundColor: '#F1F5F9',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  editButtonText: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 14,
-    color: '#6366F1',
-  },
-  section: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontFamily: 'Inter-SemiBold',
     fontSize: 16,
-    color: '#1E293B',
-    marginBottom: 16,
+  },
+  settingsContainer: {
+    padding: 20,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 15,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
-  settingLeft: {
+  lastItem: {
+    marginBottom: 0,
+  },
+  settingContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
   },
   settingText: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 16,
-    color: '#1E293B',
-    marginLeft: 12,
+    flex: 1,
   },
-  dangerSection: {
-    padding: 20,
-  },
-  deleteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FEE2E2',
-    padding: 16,
-    borderRadius: 8,
-  },
-  deleteButtonText: {
+  settingTitle: {
     fontFamily: 'Inter-SemiBold',
     fontSize: 16,
-    color: '#EF4444',
-    marginLeft: 8,
+    marginBottom: 4,
+  },
+  settingDescription: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 14,
   },
 });
