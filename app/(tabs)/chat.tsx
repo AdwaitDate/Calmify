@@ -195,7 +195,7 @@ export default function ChatScreen() {
                 marginBottom:
                   keyboardHeight > 0 ? 0 : BOTTOM_TAB_HEIGHT - insets.bottom,
                 padding: 12,
-                paddingBottom: Platform.OS === 'ios' ? 46 : 42,
+                paddingBottom: 46,
               },
             ]}
           >
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   },
   messagesContent: {
     padding: 16,
-    paddingBottom: Platform.OS === 'ios' ? 150 : 130,
+    paddingBottom: 150,
   },
   messageBubble: {
     maxWidth: '85%',
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: 12,
-    paddingBottom: Platform.OS === 'ios' ? 46 : 42,
+    paddingBottom: 46,
     borderTopWidth: 1,
     ...Platform.select({
       ios: {
