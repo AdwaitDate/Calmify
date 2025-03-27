@@ -10,11 +10,18 @@ import {
   TouchableOpacity,
   ScrollView,
   Keyboard,
+  Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { useTheme } from '@/utils/ThemeContext';
 import { Stack } from 'expo-router';
 import { SendHorizontal } from 'lucide-react-native';
+
+const BOTTOM_TAB_HEIGHT = Platform.OS === 'ios' ? 88 : 60;
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface Message {
   id: number;
@@ -25,10 +32,33 @@ interface Message {
 
 export default function ChatScreen() {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    const keyboardWillShow = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+      },
+    );
+
+    const keyboardWillHide = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setKeyboardHeight(0);
+      },
+    );
+
+    return () => {
+      keyboardWillShow.remove();
+      keyboardWillHide.remove();
+    };
+  }, []);
 
   useEffect(() => {
     setMessages([
@@ -77,6 +107,9 @@ export default function ChatScreen() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const bottomOffset =
+    keyboardHeight > 0 ? keyboardHeight - insets.bottom : BOTTOM_TAB_HEIGHT;
+
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <Stack.Screen
@@ -92,19 +125,23 @@ export default function ChatScreen() {
           },
         }}
       />
-      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
         <KeyboardAvoidingView
           style={styles.keyboardAvoidingView}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
           <ScrollView
             ref={scrollViewRef}
             style={styles.messagesContainer}
-            contentContainerStyle={styles.messagesContent}
+            contentContainerStyle={[
+              styles.messagesContent,
+              { paddingBottom: Math.max(bottomOffset, 20) },
+            ]}
             onContentSizeChange={() =>
               scrollViewRef.current?.scrollToEnd({ animated: true })
             }
+            showsVerticalScrollIndicator={false}
           >
             {messages.map((message) => (
               <View
@@ -155,6 +192,10 @@ export default function ChatScreen() {
               {
                 backgroundColor: theme.card,
                 borderTopColor: theme.border,
+                marginBottom:
+                  keyboardHeight > 0 ? 0 : BOTTOM_TAB_HEIGHT - insets.bottom,
+                padding: 12,
+                paddingBottom: Platform.OS === 'ios' ? 46 : 42,
               },
             ]}
           >
@@ -210,6 +251,7 @@ const styles = StyleSheet.create({
   },
   messagesContent: {
     padding: 16,
+    paddingBottom: Platform.OS === 'ios' ? 150 : 130,
   },
   messageBubble: {
     maxWidth: '85%',
@@ -250,7 +292,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: 12,
+    paddingBottom: Platform.OS === 'ios' ? 46 : 42,
     borderTopWidth: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   input: {
     flex: 1,
