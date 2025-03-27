@@ -1,136 +1,197 @@
-import { useState } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
+  StyleSheet,
+  Platform,
+  KeyboardAvoidingView,
+  ActivityIndicator,
   Text,
   TextInput,
   TouchableOpacity,
   ScrollView,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Send } from 'lucide-react-native';
 import { useTheme } from '@/utils/ThemeContext';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Stack } from 'expo-router';
+import { SendHorizontal } from 'lucide-react-native';
+
+interface Message {
+  id: number;
+  text: string;
+  isBot: boolean;
+  timestamp: Date;
+}
 
 export default function ChatScreen() {
   const { theme } = useTheme();
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      text: "Hello! I'm your mental health companion. How are you feeling today?",
-      isBot: true,
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  const sendMessage = () => {
-    if (message.trim()) {
-      setMessages([
-        ...messages,
-        { id: Date.now(), text: message, isBot: false },
-      ]);
-      setMessage('');
-      // Simulate bot response
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now() + 1,
-            text: "I understand how you're feeling. Would you like to talk more about it?",
-            isBot: true,
-          },
-        ]);
-      }, 1000);
-    }
+  useEffect(() => {
+    setMessages([
+      {
+        id: 1,
+        text: "Hello! I'm your mental health companion. How are you feeling today?",
+        isBot: true,
+        timestamp: new Date(),
+      },
+    ]);
+  }, []);
+
+  const sendMessage = useCallback(() => {
+    if (!inputText.trim()) return;
+
+    const newMessage: Message = {
+      id: Date.now(),
+      text: inputText.trim(),
+      isBot: false,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, newMessage]);
+    setInputText('');
+    setIsLoading(true);
+
+    // Simulate bot response
+    setTimeout(() => {
+      const botMessage: Message = {
+        id: Date.now() + 1,
+        text: "I understand how you're feeling. Would you like to talk more about it?",
+        isBot: true,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, botMessage]);
+      setIsLoading(false);
+    }, 1500);
+
+    // Scroll to bottom
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  }, [inputText]);
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.background }]}
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoid}
-      >
-        <View
-          style={[
-            styles.header,
-            { backgroundColor: theme.card, borderBottomColor: theme.border },
-          ]}
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          headerTitle: 'Mental Health Assistant',
+          headerStyle: {
+            backgroundColor: theme.card,
+          } as any,
+          headerTitleStyle: {
+            color: theme.text.primary,
+            fontFamily: 'Inter-Bold',
+          },
+        }}
+      />
+      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoidingView}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
-          <Text style={[styles.title, { color: theme.text.primary }]}>
-            Mental Health Companion
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
-            Your AI wellness assistant
-          </Text>
-        </View>
-
-        <ScrollView style={styles.messagesContainer}>
-          {messages.map((msg) => (
-            <View
-              key={msg.id}
-              style={[
-                styles.messageBubble,
-                msg.isBot
-                  ? [styles.botBubble, { backgroundColor: theme.card }]
-                  : [styles.userBubble, { backgroundColor: theme.primary }],
-              ]}
-            >
-              {msg.isBot && (
-                <LinearGradient
-                  colors={[theme.primary + '10', 'transparent']}
-                  style={styles.messageGradient}
-                />
-              )}
-              <Text
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.messagesContainer}
+            contentContainerStyle={styles.messagesContent}
+            onContentSizeChange={() =>
+              scrollViewRef.current?.scrollToEnd({ animated: true })
+            }
+          >
+            {messages.map((message) => (
+              <View
+                key={message.id}
                 style={[
-                  styles.messageText,
-                  msg.isBot
-                    ? { color: theme.text.primary }
-                    : { color: theme.text.inverse },
+                  styles.messageBubble,
+                  message.isBot
+                    ? [styles.botBubble, { backgroundColor: theme.card }]
+                    : [styles.userBubble, { backgroundColor: theme.primary }],
                 ]}
               >
-                {msg.text}
-              </Text>
-            </View>
-          ))}
-        </ScrollView>
+                <Text
+                  style={[
+                    styles.messageText,
+                    {
+                      color: message.isBot
+                        ? theme.text.primary
+                        : theme.text.inverse,
+                    },
+                  ]}
+                >
+                  {message.text}
+                </Text>
+                <Text
+                  style={[
+                    styles.timeText,
+                    {
+                      color: message.isBot
+                        ? theme.text.secondary
+                        : theme.text.inverse + '99',
+                    },
+                  ]}
+                >
+                  {formatTime(message.timestamp)}
+                </Text>
+              </View>
+            ))}
+            {isLoading && (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={theme.primary} />
+              </View>
+            )}
+          </ScrollView>
 
-        <View
-          style={[
-            styles.inputContainer,
-            {
-              backgroundColor: theme.card,
-              borderTopColor: theme.border,
-            },
-          ]}
-        >
-          <TextInput
+          <View
             style={[
-              styles.input,
+              styles.inputContainer,
               {
-                backgroundColor: theme.background,
-                color: theme.text.primary,
+                backgroundColor: theme.card,
+                borderTopColor: theme.border,
               },
             ]}
-            value={message}
-            onChangeText={setMessage}
-            placeholder="Type your message..."
-            placeholderTextColor={theme.text.secondary}
-            multiline
-          />
-          <TouchableOpacity
-            style={[styles.sendButton, { backgroundColor: theme.primary }]}
-            onPress={sendMessage}
           >
-            <Send size={20} color={theme.text.inverse} />
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.background,
+                  color: theme.text.primary,
+                },
+              ]}
+              value={inputText}
+              onChangeText={setInputText}
+              placeholder="Type a message..."
+              placeholderTextColor={theme.text.secondary}
+              multiline
+              maxLength={500}
+            />
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                {
+                  backgroundColor: inputText.trim()
+                    ? theme.primary
+                    : theme.border,
+                  opacity: inputText.trim() ? 1 : 0.5,
+                },
+              ]}
+              onPress={sendMessage}
+              disabled={!inputText.trim()}
+            >
+              <SendHorizontal size={20} color={theme.text.inverse} />
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -138,39 +199,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  keyboardAvoid: {
+  safeArea: {
     flex: 1,
   },
-  header: {
-    padding: 20,
-    borderBottomWidth: 1,
-  },
-  title: {
-    fontFamily: 'Inter-Bold',
-    fontSize: 20,
-  },
-  subtitle: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 14,
-    marginTop: 4,
+  keyboardAvoidingView: {
+    flex: 1,
   },
   messagesContainer: {
     flex: 1,
-    padding: 20,
+  },
+  messagesContent: {
+    padding: 16,
   },
   messageBubble: {
-    maxWidth: '80%',
+    maxWidth: '85%',
     padding: 12,
     borderRadius: 16,
-    marginBottom: 12,
-    overflow: 'hidden',
-  },
-  messageGradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    height: 100,
+    marginBottom: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   botBubble: {
     alignSelf: 'flex-start',
@@ -182,23 +238,41 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 16,
-    lineHeight: 24,
+    lineHeight: 22,
+    fontFamily: 'Inter-Regular',
+  },
+  timeText: {
+    fontSize: 12,
+    marginTop: 4,
     fontFamily: 'Inter-Regular',
   },
   inputContainer: {
     flexDirection: 'row',
-    padding: 16,
+    alignItems: 'flex-end',
+    padding: 12,
     borderTopWidth: 1,
   },
   input: {
     flex: 1,
-    borderRadius: 24,
+    marginRight: 12,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    marginRight: 12,
+    borderRadius: 20,
     fontSize: 16,
+    lineHeight: 24,
     fontFamily: 'Inter-Regular',
     maxHeight: 100,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   sendButton: {
     width: 40,
@@ -206,5 +280,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  loadingContainer: {
+    padding: 8,
+    alignItems: 'flex-start',
   },
 });
